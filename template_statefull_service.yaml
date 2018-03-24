@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minecraft{{id}}
+spec:
+  serviceName: "minecraft"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minecraft{{id}}
+  template:
+    metadata:
+      labels:
+        app: minecraft{{id}}
+    spec:
+      containers:
+      - name: minecraft{{id}}
+        image: openhack/minecraft-server:2.0
+        ports:
+        - containerPort: 25565
+          name: game
+        - containerPort: 25575
+          name: console
+        env:
+        - name: EULA
+          value: "TRUE"
+        volumeMounts:
+        - name: minecraft{{id}}
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: minecraft{{id}}
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minecraft{{id}}
+  labels:
+    run: minecraft{{id}}
+spec:
+  type: LoadBalancer
+  selector:
+    app: minecraft{{id}}
+  ports:
+  - name: game
+    port: 25565
+    targetPort: game
+    protocol: TCP
+  - name: console
+    port: 25575
+    targetPort: console
+    protocol: TCP
